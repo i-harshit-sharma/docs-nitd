@@ -1,12 +1,8 @@
 # Table of contents
 
-## Introduction
-
-* [Overview](README.md)
-
 ## JSX Components
 
-* [BottomNavbar](jsx-components/bottomnavbar.md)
+* [BottomNavbar](README.md)
 * [EmailToImage](jsx-components/emailtoimage.md)
 * [Gallery](jsx-components/gallery.md)
 * [ImageTextCard](jsx-components/imagetextcard.md)

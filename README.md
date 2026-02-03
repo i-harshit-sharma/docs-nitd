@@ -1,50 +1,215 @@
-# Overview
+# BottomNavbar
 
-NITD website is a **monorepo**, built using **Turborepo** and **PNPM Workspaces**. It separates the main website, department portals, and specific functional applications into distinct apps while sharing UI and configuration.
+The `BottomNavbar` component is a fully configuration-driven, responsive navigation bar. It automatically switches between a sticky horizontal bar on desktop and a hamburger-menu drawer on mobile devices based on a configured config.
 
-### Project Structure
+### Usage
 
-The project is organized into `apps` (applications) and `packages` (shared libraries).
+**IMPORTANT:** This component works only if used in client component and provide match: mandatorily.
 
-#### **Applications (`apps/`)**
+The component requires a `navConfig` object to define its structure. Below are three real-world examples demonstrating different configurations.
 
-* **`home_page`**: The primary public-facing website. It is the largest application and serves as the main entry point.
-* **Department Portals**: Separate Next.js apps for each department:
-  * `cse_department` (Computer Science)
-  * `ece_department` (Electronics & Comm)
-  * `ee_department` (Electrical)
-  * `mae_department` (Mechanical)
-  * `ce_department` (Civil)
-  * `ashm_department` (Applied Sciences)
-* **Functional Apps**:
-  * `tnp`: Training & Placement Cell portal.
-  * `convocation`: Dedicated app for convocation events.
-  * `faculty_profile`: Faculty profile management/display system.
+#### Example 1: Standard Link Navigation
 
-#### **Shared Packages (`packages/`)**
+**Use Case:** Technical Club Page A simple list of links with icons.
 
-* **`ui`**: Shared UI component library to ensure design consistency across all apps.
-* **`lib`**: Common utility functions and logic.
-* **`eslint-config`** & **`tailwind-config`**: Shared configurations for linting and styling.
+```jsx
+import { House, Users, Images, FolderOpen, MailQuestion } from "lucide-react";
 
-### 🛠️ Tech Stack (Main Stack)
+export const techClubConfig = {
+    heading: "Tech Club",
+    breakpoint: 840, // Switch to mobile menu below 840px
+    arr: [
+        {
+            type: "link",
+            label: "About",
+            href: "/facilities/technical-club/about",
+            icon: House,
+            match: (path) => path?.[3] === "about",
+        },
+        {
+            type: "link",
+            label: "Gallery",
+            href: "/facilities/technical-club/gallery",
+            icon: Images,
+            match: (path) => path?.[3] === "gallery",
+        },
+        // ... more links
+    ],
+};
+```
 
-* **Framework**: **Next.js 15** (App Router)
-* **Language**: JavaScript / TypeScript (Files show `.js`, `.jsx` mixed with TS awareness)
-* **Core Library**: **React 19**
-* **Styling**:
-  * **Tailwind CSS v4** (Primary styling engine)
-  * **HeroUI** & **Radix UI** (Accessible UI primitives)
-  * **MUI (Material UI)** & **Emotion** (Used for specific components)
-* **Animations**: **Framer Motion**, **GSAP**, and **Motion** for high-fidelity interactions.
-* **Data & State**:
-  * **Mongoose**: MongoDB object modeling (likely for direct DB routes).
-  * **SWR**: React hooks for data fetching.
-  * **Axios**: HTTP client.
+#### Example 2: Mixed Links & Dropdowns
 
-### 🚀 Key Features & libraries
+**Use Case:** Convocation Page Combines direct links with a dropdown menu for past events.
 
-* **Interactive UI**: Uses `swiper`, `keen-slider`, and `react-image-gallery` for carousels and media.
-* **Data Visualization**: `chart.js` and `react-chartjs-2`.
-* **Search**: `fuzzysort` for client-side fuzzy searching.
-* **Build System**: `turbo` for high-performance builds and caching.
+```jsx
+import { House, GraduationCap, Medal, Users } from "lucide-react";
+
+export const convocationConfig = {
+    heading: "Convocations",
+    breakpoint: 1050,
+    arr: [
+        {
+            type: "link",
+            label: "Current Convocation",
+            href: "/",
+            icon: House,
+            // Match logic checks the second path segment
+            match: (path) => path?.[1] === "",
+        },
+        {
+            type: "link",
+            label: "Medalists",
+            href: "/medalists",
+            icon: Users,
+            match: (path) => path?.[1] === "medalists",
+        },
+        {
+            type: "dropdown",
+            key: "past-convocations", // Unique key for state
+            label: "Past Convocations",
+            icon: Medal,
+            // The dropdown parent itself can highlight if a child matches
+            match: (path) => ["4th", "3rd", "2nd"].includes(path?.[1]),
+            items: [
+                {
+                    label: "4th Convocation",
+                    href: "/4th",
+                    match: "4th", // Sub-item match string
+                },
+                {
+                    label: "3rd Convocation",
+                    href: "/3rd",
+                    match: "3rd",
+                },
+            ],
+        },
+    ],
+};
+```
+
+#### Example 3: Tab-Style Buttons
+
+**Use Case:** RTI Disclosure Uses `type: "btn"` to act as an in-page tab switcher instead of improving navigation. This requires passing `selectID` and `setID` props to the component.
+
+```jsx
+// navConfig.js
+export const rtiConfig = {
+    heading: "RTI Info",
+    breakpoint: 1260,
+    arr: [
+        {
+            type: "btn",
+            label: "Organisation & Function",
+            // No href needed for buttons, logic handled by parent state
+            match: () => false, 
+        },
+        {
+            type: "btn",
+            label: "Budget & Programmes",
+            match: () => false,
+        },
+    ]
+};
+
+// Page Component
+function RtiPage() {
+    const [activeTab, setActiveTab] = useState(0); 
+    
+    return (
+        <Navbar 
+            navConfig={rtiConfig}
+            selectID={activeTab}
+            setID={setActiveTab}
+        />
+    );
+}
+```
+
+### Props
+
+<table><thead><tr><th width="115">Prop</th><th width="111.800048828125">Type</th><th width="112.800048828125">Default</th><th>Description</th></tr></thead><tbody><tr><td><code>navConfig</code></td><td><code>NavConfig</code></td><td>Required</td><td>The configuration object defining the menu structure.</td></tr><tr><td><code>selectID</code></td><td><code>number</code></td><td><code>null</code></td><td>The index of the currently active <em>tab-style</em> button (if using <code>type: "btn"</code>).</td></tr><tr><td><code>setID</code></td><td><code>Function</code></td><td><code>undefined</code></td><td>State setter for <code>selectID</code>. Required if using <code>type: "btn"</code>.</td></tr><tr><td><code>Debug</code></td><td><code>boolean</code></td><td><code>false</code></td><td>If true, logs the current route segments to the console for debugging <code>match</code> functions.</td></tr></tbody></table>
+
+### Configuration (`NavConfig`)
+
+The config object controls the layout. Structure defined in `navConfig.types.js`.
+
+**Passing match: is mandatory for now**
+
+#### Top-Level Properties
+
+* **`breakpoint`** (number): The viewport width (px) below which the navbar switches to mobile mode.
+* **`heading`** (string): The title displayed at the top of the mobile drawer.
+* **`arr`** (Array): List of items (`Link`, `Button`, or `Dropdown`).
+
+#### Item Types
+
+**1. Link Item**
+
+Navigates to a URL.
+
+```javascript
+{
+  type: "link",
+  label: "Home",
+  href: "/home",
+  icon: IconComponent, // Optional Lucide icon
+  match: (pathArray) => boolean // Returns true if active
+}
+```
+
+**2. Button Item (`btn`)**
+
+Acts like a tab selector. Does not navigate; matches state based on `selectID`.
+
+```javascript
+{
+  type: "btn",
+  label: "Tabs",
+  // requires passing selectID and setID to the component
+}
+```
+
+**3. Dropdown Item**
+
+Opens a sub-menu.
+
+```javascript
+{
+  type: "dropdown",
+  key: "unique-key", // Unique string for state management
+  label: "Menu",
+  items: [
+    { label: "Sub Link", href: "...", match: "string-segment" }
+  ]
+}
+```
+
+### Implementation Gotchas
+
+#### 1. Hardcoded Sticky Offsets
+
+The component has hardcoded `top` values for its sticky positioning, tailored to a specific header height:
+
+```javascript
+className="sticky 400px:top-[153px] sm:top-[120px] max-[400px]:top-[125px] ..."
+```
+
+**Risk**: If you change the main site header's height, this navbar might overlap it or leave a gap. You may need to edit these Tailwind classes in `BottomNavbar.jsx`.
+
+#### 2. Match Functions
+
+The `match` function receives the _split_ pathname array (e.g., `['', 'apps', 'home']`).
+
+* **Debugging**: Pass `Debug={true}` to the component to see the exact `path` array in the console, ensuring your match logic is correct.
+
+#### 3. Client-Side Responsiveness
+
+The mobile/desktop switch uses `window.innerWidth`.
+
+* It runs only on the client (`use client`).
+* The component returns an empty placeholder div initially until the specific mount check runs to prevent hydration mismatches. This might cause a slight layout shift or "pop" on initial load.
+
+#### 4. Click Outside
+
+The dropdowns use a `document` event listener to close when clicking outside. Ensure `navRef` is correctly bound (it is by default) so this behavior persists.
